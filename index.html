@@ -99,7 +99,7 @@
 
     function carregarDados() {
       const aba = document.getElementById("faixaSelect").value;
-      const url = `${endpointBase}?email=${email}&aba=${aba}`;
+      const url = `${endpointBase}?email=${email}&aba=${aba}`; // ✅ LINHA CORRIGIDA
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
       fetch(url)
