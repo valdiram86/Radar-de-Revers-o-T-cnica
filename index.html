@@ -20,11 +20,37 @@
     select, button { padding: 6px; margin-right: 10px; }
     .status { font-weight: bold; margin-bottom: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
+
+    .legenda {
+      margin-bottom: 15px;
+    }
+    .legenda span {
+      display: inline-block;
+      margin-right: 12px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .confirmado { background: #d4edda; }
+    .rsi { background: #d0e7ff; }
+    .atencao { background: #ffe4b5; }
+    .moderada { background: #ffc2c2; }
+    .forte { background: #ffaaaa; }
+    .neutro { background: #ffffcc; }
   </style>
 </head>
 
 <body>
   <h2>📊 Radar de Reversão Técnica</h2>
+
+  <div class="legenda">
+    <span class="confirmado">✅ Confirmado</span>
+    <span class="rsi">🟦 RSI baixo</span>
+    <span class="atencao">🟧 Atenção</span>
+    <span class="moderada">🟥 Queda moderada</span>
+    <span class="forte">🔴 Queda forte</span>
+    <span class="neutro">🟨 Neutro</span>
+  </div>
 
   <div id="filtro">
     <label for="faixaSelect">Filtrar por faixa de ranking:</label>
@@ -72,7 +98,7 @@
     }
 
     function montarTabela(dados) {
-      const colunas = Object.keys(dados[0]).filter(col => col !== "Status"); // remove Status
+      const colunas = Object.keys(dados[0]).filter(col => col.toLowerCase() !== "status");
       const cabecalho = document.getElementById("cabecalho");
       const corpo = document.getElementById("conteudo");
 
@@ -135,7 +161,8 @@
       const [min, max] = faixaMap[faixaSelecionada] || [1, 2000];
 
       const dadosFiltrados = todosOsDados.filter(linha => {
-        const raw = linha["Ranking"];
+        const rankingColuna = Object.keys(linha).find(c => c.toLowerCase().includes("rank"));
+        const raw = linha[rankingColuna];
         const rank = parseInt(String(raw).replace(/\D/g, "")) || 0;
         return rank >= min && rank <= max;
       });
