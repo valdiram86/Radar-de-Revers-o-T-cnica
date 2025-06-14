@@ -1,147 +1,115 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Painel – Reversão Técnica</title>
-
-  <!-- DataTables -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
+  <title>Scanner – Faixas de Ranking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
       padding: 20px;
-      zoom: 90%;
+      background-color: #f4f4f4;
     }
-
     h2 {
       margin-bottom: 10px;
     }
-
-    select, input[type="text"] {
-      padding: 8px;
-      font-size: 16px;
-      margin-bottom: 20px;
-      margin-right: 10px;
-    }
-
     table {
       width: 100%;
-      border-collapse: collapse;
       background-color: white;
     }
-
-    td, th {
-      padding: 8px;
-      text-align: center;
-      border: 1px solid #ccc;
+    select {
+      margin-bottom: 20px;
+      padding: 5px;
+      font-size: 16px;
     }
-
-    th {
-      background-color: #eee;
+    .tabela-container {
+      overflow-x: auto;
     }
-
-    .verde    { background-color: #32CD32; color: black; }
-    .amarelo  { background-color: #FFFF66; color: black; }
-    .laranja  { background-color: #FFA500; color: black; }
-    .vermelho { background-color: #FF6347; color: black; }
-    .escuro   { background-color: #006400; color: white; }
-
   </style>
 </head>
 <body>
 
-  <h2>📊 Painel Técnico – Reversão por Faixa</h2>
+  <h2>Scanner Cripto – Faixas de Ranking</h2>
 
-  <label for="faixa">Faixa Ranking:</label>
-  <select id="faixa">
-    <option value="Top1_40">Top 1–40</option>
-    <option value="Top41_100">Top 41–100</option>
-    <option value="Top101_200">Top 101–200</option>
-    <option value="Top201_350">Top 201–350</option>
-    <option value="Top351_600">Top 351–600</option>
-    <option value="Top601_1000">Top 601–1000</option>
-    <option value="Top1001_2000">Top 1001–2000</option>
+  <label for="abaSelector"><strong>Escolha a faixa:</strong></label>
+  <select id="abaSelector">
+    <option value="Faixa1_40">1 a 40</option>
+    <option value="Faixa41_100">41 a 100</option>
+    <option value="Faixa101_250">101 a 250</option>
+    <option value="Faixa251_500">251 a 500</option>
+    <option value="Faixa501_1000">501 a 1000</option>
+    <option value="Faixa1001_1500">1001 a 1500</option>
   </select>
 
-  <input type="text" id="filtro" placeholder="Buscar por ranking ou símbolo">
+  <div class="tabela-container">
+    <table id="tabela" class="display nowrap">
+      <thead>
+        <tr id="cabecalho"></tr>
+      </thead>
+      <tbody id="corpo"></tbody>
+    </table>
+  </div>
 
-  <table id="tabela">
-    <thead></thead>
-    <tbody></tbody>
-  </table>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbwjMWqtplLEhijAGc5p8CNaxJfKxyhvZnCQKHnbVLec3jSDkoOy_DcjfjWfTg3rnnrr/exec?";
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec';
 
-    async function carregarDados(abaSelecionada) {
-      const url = `${endpoint}?aba=${abaSelecionada}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      const dados = json.dados;
-
-      const tabela = $("#tabela").DataTable();
-      tabela.clear().destroy();
-
-      if (!dados || dados.length === 0) {
-        $("#tabela thead").html("<tr><th>Sem dados disponíveis</th></tr>");
-        $("#tabela tbody").html("");
-        return;
-      }
-
-      const colunas = Object.keys(dados[0]);
-      const thead = colunas.map(c => `<th>${c}</th>`).join("");
-      $("#tabela thead").html(`<tr>${thead}</tr>`);
-
-      const tbody = dados.map(linha => {
-        const linhaHtml = colunas.map((col, i) => {
-          let valor = linha[col];
-          if (typeof valor === "number") valor = valor.toFixed(2);
-          return `<td>${valor}</td>`;
-        }).join("");
-        return `<tr>${linhaHtml}</tr>`;
-      }).join("");
-
-      $("#tabela tbody").html(tbody);
-
-      $("#tabela").DataTable({
-        paging: false,
-        searching: true,
-        info: false,
-        order: [[4, "desc"]]
-      });
-
-      aplicarCores();
-    }
-
-    function aplicarCores() {
-      $("#tabela tbody tr").each(function () {
-        const score = parseFloat($(this).find("td:eq(4)").text());
-        if (score >= 80) $(this).find("td:eq(4)").addClass("escuro");
-        else if (score >= 60) $(this).find("td:eq(4)").addClass("verde");
-        else if (score >= 40) $(this).find("td:eq(4)").addClass("amarelo");
-        else if (score >= 20) $(this).find("td:eq(4)").addClass("laranja");
-        else $(this).find("td:eq(4)").addClass("vermelho");
-      });
-    }
-
-    document.getElementById("faixa").addEventListener("change", e => {
-      carregarDados(e.target.value);
+    document.getElementById('abaSelector').addEventListener('change', () => {
+      const abaSelecionada = document.getElementById('abaSelector').value;
+      carregarDados(abaSelecionada);
     });
 
-    document.getElementById("filtro").addEventListener("keyup", function () {
-      const valor = this.value.toLowerCase();
-      $("#tabela").DataTable().search(valor).draw();
-    });
+    function carregarDados(aba) {
+      fetch(`${API_URL}?aba=${aba}`)
+        .then(response => response.json())
+        .then(dados => {
+          if (!dados || !dados.length) return;
 
-    // Carrega inicial
-    carregarDados("Top1_40");
+          const colunas = dados[0];
+          const linhas = dados.slice(1);
+
+          const cabecalho = document.getElementById('cabecalho');
+          const corpo = document.getElementById('corpo');
+
+          cabecalho.innerHTML = '';
+          corpo.innerHTML = '';
+
+          colunas.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            cabecalho.appendChild(th);
+          });
+
+          linhas.forEach(linha => {
+            const tr = document.createElement('tr');
+            linha.forEach(celula => {
+              const td = document.createElement('td');
+              td.innerHTML = celula;
+              tr.appendChild(td);
+            });
+            corpo.appendChild(tr);
+          });
+
+          if ($.fn.DataTable.isDataTable('#tabela')) {
+            $('#tabela').DataTable().destroy();
+          }
+
+          $('#tabela').DataTable({
+            paging: false,
+            scrollX: true,
+            scrollCollapse: true,
+            info: false,
+            searching: false
+          });
+        });
+    }
+
+    // Carrega a primeira aba automaticamente
+    window.onload = () => carregarDados('Faixa1_40');
   </script>
-
 </body>
 </html>
