@@ -2,17 +2,22 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Scanner Cripto – Faixa 1 a 40</title>
+  <title>Radar Técnico por Faixa</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       background-color: #f4f4f4;
+      padding: 20px;
     }
     h2 {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    select {
+      font-size: 16px;
+      padding: 5px;
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
@@ -22,7 +27,18 @@
 </head>
 <body>
 
-  <h2>Scanner Cripto – Faixa 1 a 40</h2>
+  <h2>Radar Técnico – Faixas de Ranking</h2>
+
+  <label for="faixaSelect"><strong>Escolha a faixa:</strong></label>
+  <select id="faixaSelect">
+    <option value="Top1_40">Top 1–40</option>
+    <option value="Top41_100">Top 41–100</option>
+    <option value="Top101_200">Top 101–200</option>
+    <option value="Top201_350">Top 201–350</option>
+    <option value="Top351_600">Top 351–600</option>
+    <option value="Top601_1000">Top 601–1000</option>
+    <option value="Top1001_2000">Top 1001–2000</option>
+  </select>
 
   <div style="overflow-x:auto;">
     <table id="tabela" class="display nowrap">
@@ -35,52 +51,62 @@
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec?aba=Faixa1_40';
+    const BASE_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec';
 
-    fetch(API_URL)
-      .then(response => response.json())
-      .then(dados => {
-        if (!dados || dados.length === 0) {
-          alert("Nenhum dado encontrado.");
-          return;
-        }
+    function carregarDados(aba) {
+      fetch(`${BASE_URL}?aba=${aba}`)
+        .then(response => response.json())
+        .then(dados => {
+          if (!dados || dados.length === 0) {
+            alert("Nenhum dado encontrado para essa faixa.");
+            return;
+          }
 
-        const cabecalho = document.getElementById("cabecalho");
-        const corpo = document.getElementById("corpo");
+          const cabecalho = document.getElementById("cabecalho");
+          const corpo = document.getElementById("corpo");
+          cabecalho.innerHTML = '';
+          corpo.innerHTML = '';
 
-        cabecalho.innerHTML = '';
-        corpo.innerHTML = '';
-
-        // Cabeçalho
-        dados[0].forEach(coluna => {
-          const th = document.createElement("th");
-          th.textContent = coluna;
-          cabecalho.appendChild(th);
-        });
-
-        // Corpo
-        dados.slice(1).forEach(linha => {
-          const tr = document.createElement("tr");
-          linha.forEach(celula => {
-            const td = document.createElement("td");
-            td.innerHTML = celula;
-            tr.appendChild(td);
+          dados[0].forEach(titulo => {
+            const th = document.createElement("th");
+            th.textContent = titulo;
+            cabecalho.appendChild(th);
           });
-          corpo.appendChild(tr);
-        });
 
-        // Iniciar DataTable
-        $('#tabela').DataTable({
-          paging: false,
-          scrollX: true,
-          searching: false,
-          info: false
+          dados.slice(1).forEach(linha => {
+            const tr = document.createElement("tr");
+            linha.forEach(celula => {
+              const td = document.createElement("td");
+              td.innerHTML = celula;
+              tr.appendChild(td);
+            });
+            corpo.appendChild(tr);
+          });
+
+          if ($.fn.DataTable.isDataTable('#tabela')) {
+            $('#tabela').DataTable().destroy();
+          }
+
+          $('#tabela').DataTable({
+            paging: false,
+            scrollX: true,
+            searching: false,
+            info: false
+          });
+        })
+        .catch(erro => {
+          console.error("Erro ao carregar:", erro);
+          alert("Erro ao buscar dados. Verifique o console.");
         });
-      })
-      .catch(erro => {
-        console.error("Erro ao carregar dados:", erro);
-        alert("Erro ao carregar dados.");
-      });
+    }
+
+    document.getElementById("faixaSelect").addEventListener("change", function () {
+      carregarDados(this.value);
+    });
+
+    // Carrega faixa padrão ao abrir
+    window.onload = () => carregarDados('Top1_40');
   </script>
+
 </body>
 </html>
