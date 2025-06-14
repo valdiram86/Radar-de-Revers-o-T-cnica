@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reversal Volume Scanner</title>
+
+  <!-- DataTables CSS/JS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; zoom: 90%; }
+    h2 { margin-top: 0; }
+    table { width: 100%; background: white; border-collapse: collapse; }
+    .status { font-weight: bold; margin-bottom: 15px; color: green; }
+  </style>
+</head>
+
+<body>
+  <h2>📈 Reversal Volume Scanner</h2>
+  <p class="status" id="statusMsg">Carregando dados...</p>
+  <hr />
+
+  <table id="tabela" class="display" style="display:none">
+    <thead>
+      <tr id="cabecalho"></tr>
+    </thead>
+    <tbody id="conteudo"></tbody>
+  </table>
+
+  <script>
+    const endpoint = "https://script.google.com/macros/s/AKfycbzQwgm1IcDrBwUkYJFdhNzKlk8PFES6FLqUeL5tSQevXi-G02T_8sX8F1l0mwunN4WE/exec";
+
+    function carregarDadosDireto() {
+      fetch(endpoint)
+        .then(r => r.json())
+        .then(json => {
+          const dados = json.dados || [];
+
+          if (dados.length === 0) {
+            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
+            return;
+          }
+
+          const colunas = Object.keys(dados[0]);
+
+          const headRow = document.getElementById("cabecalho");
+          headRow.innerHTML = "";
+          colunas.forEach(col => {
+            headRow.innerHTML += `<th>${col}</th>`;
+          });
+
+          const corpo = document.getElementById("conteudo");
+          corpo.innerHTML = "";
+          dados.forEach(linha => {
+            let row = "<tr>";
+            colunas.forEach(col => {
+              const valor = linha[col];
+              if (String(valor).includes("http")) {
+                row += `<td><a href="${valor}" target="_blank">🔗 Link</a></td>`;
+              } else {
+                row += `<td>${valor}</td>`;
+              }
+            });
+            row += "</tr>";
+            corpo.innerHTML += row;
+          });
+
+          document.getElementById("tabela").style.display = "table";
+          $('#tabela').DataTable({
+            destroy: true,
+            pageLength: 50,
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf']
+          });
+
+          document.getElementById("statusMsg").innerText = "✅ Dados carregados com sucesso.";
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("statusMsg").innerText = "❌ Erro ao buscar dados.";
+        });
+    }
+
+    // Carregar automaticamente ao abrir
+    window.onload = carregarDadosDireto;
+  </script>
+</body>
+</html>
