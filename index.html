@@ -1,174 +1,147 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📊 Radar de Reversão Técnica</title>
+  <title>Painel – Reversão Técnica</title>
 
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
-    h2 { margin-top: 0; }
-    #filtro { margin-bottom: 20px; }
-    select, button { padding: 6px; margin-left: 10px; }
-    table { width: 100%; background: white; border-collapse: collapse; }
-
-    .legenda { margin-bottom: 10px; }
-    .legenda span {
-      display: inline-block;
-      margin-right: 12px;
-      padding: 3px 8px;
-      border-radius: 5px;
-      font-size: 14px;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+      zoom: 90%;
     }
-    .confirmado { background: #d4edda; }
-    .rsi { background: #d0e7ff; }
-    .atencao { background: #ffe4b5; }
-    .moderada { background: #ffc2c2; }
-    .forte { background: #ffaaaa; }
-    .neutro { background: #ffffcc; }
-    .status { font-weight: bold; margin-bottom: 10px; }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    select, input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      margin-right: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+
+    td, th {
+      padding: 8px;
+      text-align: center;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .verde    { background-color: #32CD32; color: black; }
+    .amarelo  { background-color: #FFFF66; color: black; }
+    .laranja  { background-color: #FFA500; color: black; }
+    .vermelho { background-color: #FF6347; color: black; }
+    .escuro   { background-color: #006400; color: white; }
+
   </style>
 </head>
-
 <body>
-  <h2>📊 Radar de Reversão Técnica</h2>
 
-  <div class="legenda">
-    <span class="confirmado">✅ Confirmado</span>
-    <span class="rsi">🟦 RSI baixo</span>
-    <span class="atencao">🟧 Atenção</span>
-    <span class="moderada">🟥 Queda moderada</span>
-    <span class="forte">🔴 Queda forte</span>
-    <span class="neutro">🟨 Neutro</span>
-  </div>
+  <h2>📊 Painel Técnico – Reversão por Faixa</h2>
 
-  <div id="filtro">
-    <label for="faixaSelect">Filtrar por faixa de ranking:</label>
-    <select id="faixaSelect">
-      <option value="Todos">Todos</option>
-      <option value="Top1_40">Top 1–40</option>
-      <option value="Top41_100">Top 41–100</option>
-      <option value="Top101_200">Top 101–200</option>
-      <option value="Top201_350">Top 201–350</option>
-      <option value="Top351_600">Top 351–600</option>
-      <option value="Top601_1000">Top 601–1000</option>
-      <option value="Top1001_2000">Top 1001–2000</option>
-    </select>
-    <button onclick="filtrarTabela()">Buscar</button>
-  </div>
+  <label for="faixa">Faixa Ranking:</label>
+  <select id="faixa">
+    <option value="Top1_40">Top 1–40</option>
+    <option value="Top41_100">Top 41–100</option>
+    <option value="Top101_200">Top 101–200</option>
+    <option value="Top201_350">Top 201–350</option>
+    <option value="Top351_600">Top 351–600</option>
+    <option value="Top601_1000">Top 601–1000</option>
+    <option value="Top1001_2000">Top 1001–2000</option>
+  </select>
 
-  <div class="status" id="statusMsg">Carregando dados...</div>
+  <input type="text" id="filtro" placeholder="Buscar por ranking ou símbolo">
 
-  <table id="tabela" class="display" style="display:none">
-    <thead><tr id="cabecalho"></tr></thead>
-    <tbody id="conteudo"></tbody>
+  <table id="tabela">
+    <thead></thead>
+    <tbody></tbody>
   </table>
 
   <script>
     const endpoint = "https://script.google.com/macros/s/AKfycbyt9VqpHPFrLFpjp4Xvkjw2MHt2Dz_IwG9rtHCQBQNJ9iBBlQP0Fi_c0M3YV8qGRzcmcQ/exec";
-    let todosOsDados = [];
 
-    function carregarDados() {
-      fetch(endpoint)
-        .then(res => res.json())
-        .then(json => {
-          if (!json || !json.dados || json.dados.length === 0) {
-            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado disponível.";
-            return;
-          }
+    async function carregarDados(abaSelecionada) {
+      const url = `${endpoint}?aba=${abaSelecionada}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const dados = json.dados;
 
-          todosOsDados = json.dados;
-          montarTabela(todosOsDados);
-          document.getElementById("statusMsg").innerText = "✅ Dados carregados com sucesso.";
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("statusMsg").innerText = "❌ Erro ao buscar dados.";
-        });
-    }
+      const tabela = $("#tabela").DataTable();
+      tabela.clear().destroy();
 
-    function montarTabela(dados) {
-      const colunas = Object.keys(dados[0]);
-      const cabecalho = document.getElementById("cabecalho");
-      const corpo = document.getElementById("conteudo");
-
-      cabecalho.innerHTML = "";
-      corpo.innerHTML = "";
-
-      colunas.forEach(col => {
-        cabecalho.innerHTML += `<th>${col}</th>`;
-      });
-
-      dados.forEach(linha => {
-        let row = "<tr>";
-        colunas.forEach(col => {
-          const val = linha[col];
-          if (String(val).includes("http")) {
-            row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
-          } else if (col === "Score Técnico") {
-            const score = parseFloat(val);
-            let cor = "#fff";
-            if (score >= 80) cor = "#006400";
-            else if (score >= 60) cor = "#32CD32";
-            else if (score >= 40) cor = "#FFFF00";
-            else if (score >= 20) cor = "#FFA500";
-            else cor = "#FF6347";
-            row += `<td style="background:${cor}; font-weight:bold;">${val}</td>`;
-          } else {
-            row += `<td>${val}</td>`;
-          }
-        });
-        row += "</tr>";
-        corpo.innerHTML += row;
-      });
-
-      document.getElementById("tabela").style.display = "table";
-      $('#tabela').DataTable({
-        destroy: true,
-        paging: false,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf']
-      });
-    }
-
-    function filtrarTabela() {
-      const faixaSelecionada = document.getElementById("faixaSelect").value;
-      if (faixaSelecionada === "Todos") {
-        montarTabela(todosOsDados);
+      if (!dados || dados.length === 0) {
+        $("#tabela thead").html("<tr><th>Sem dados disponíveis</th></tr>");
+        $("#tabela tbody").html("");
         return;
       }
 
-      const faixaMap = {
-        "Top1_40": [1, 40],
-        "Top41_100": [41, 100],
-        "Top101_200": [101, 200],
-        "Top201_350": [201, 350],
-        "Top351_600": [351, 600],
-        "Top601_1000": [601, 1000],
-        "Top1001_2000": [1001, 2000]
-      };
+      const colunas = Object.keys(dados[0]);
+      const thead = colunas.map(c => `<th>${c}</th>`).join("");
+      $("#tabela thead").html(`<tr>${thead}</tr>`);
 
-      const [min, max] = faixaMap[faixaSelecionada] || [1, 2000];
+      const tbody = dados.map(linha => {
+        const linhaHtml = colunas.map((col, i) => {
+          let valor = linha[col];
+          if (typeof valor === "number") valor = valor.toFixed(2);
+          return `<td>${valor}</td>`;
+        }).join("");
+        return `<tr>${linhaHtml}</tr>`;
+      }).join("");
 
-      const dadosFiltrados = todosOsDados.filter(linha => {
-        const rankingColuna = Object.keys(linha).find(c => c.toLowerCase().includes("rank"));
-        const raw = linha[rankingColuna];
-        const rank = Number(String(raw).match(/\d+/)?.[0] || 0);
-        return rank >= min && rank <= max;
+      $("#tabela tbody").html(tbody);
+
+      $("#tabela").DataTable({
+        paging: false,
+        searching: true,
+        info: false,
+        order: [[4, "desc"]]
       });
 
-      montarTabela(dadosFiltrados);
+      aplicarCores();
     }
 
-    window.onload = carregarDados;
+    function aplicarCores() {
+      $("#tabela tbody tr").each(function () {
+        const score = parseFloat($(this).find("td:eq(4)").text());
+        if (score >= 80) $(this).find("td:eq(4)").addClass("escuro");
+        else if (score >= 60) $(this).find("td:eq(4)").addClass("verde");
+        else if (score >= 40) $(this).find("td:eq(4)").addClass("amarelo");
+        else if (score >= 20) $(this).find("td:eq(4)").addClass("laranja");
+        else $(this).find("td:eq(4)").addClass("vermelho");
+      });
+    }
+
+    document.getElementById("faixa").addEventListener("change", e => {
+      carregarDados(e.target.value);
+    });
+
+    document.getElementById("filtro").addEventListener("keyup", function () {
+      const valor = this.value.toLowerCase();
+      $("#tabela").DataTable().search(valor).draw();
+    });
+
+    // Carrega inicial
+    carregarDados("Top1_40");
   </script>
+
 </body>
 </html>
