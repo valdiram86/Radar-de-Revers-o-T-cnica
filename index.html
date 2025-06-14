@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reversal Volume Scanner</title>
 
-  <!-- DataTables CSS/JS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -15,19 +15,34 @@
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; zoom: 90%; }
+    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
     h2 { margin-top: 0; }
-    table { width: 100%; background: white; border-collapse: collapse; }
-    .status { font-weight: bold; margin-bottom: 15px; color: green; }
+    #filtro { margin-bottom: 20px; }
+    select { padding: 6px; }
+    .status { font-weight: bold; margin-bottom: 10px; }
   </style>
 </head>
 
 <body>
   <h2>📈 Reversal Volume Scanner</h2>
-  <p class="status" id="statusMsg">Carregando dados...</p>
-  <hr />
 
-  <table id="tabela" class="display" style="display:none">
+  <div id="filtro">
+    <label for="faixaSelect">Filtrar por faixa de ranking:</label>
+    <select id="faixaSelect" onchange="filtrarTabela()">
+      <option value="Todos">Todos</option>
+      <option value="Top1_40">Top 1–40</option>
+      <option value="Top41_100">Top 41–100</option>
+      <option value="Top101_200">Top 101–200</option>
+      <option value="Top201_350">Top 201–350</option>
+      <option value="Top351_600">Top 351–600</option>
+      <option value="Top601_1000">Top 601–1000</option>
+      <option value="Top1001_2000">Top 1001–2000</option>
+    </select>
+  </div>
+
+  <div class="status" id="statusMsg">Carregando dados...</div>
+
+  <table id="tabela" class="display" style="width:100%; display:none;">
     <thead>
       <tr id="cabecalho"></tr>
     </thead>
@@ -36,50 +51,19 @@
 
   <script>
     const endpoint = "https://script.google.com/macros/s/AKfycbzQwgm1IcDrBwUkYJFdhNzKlk8PFES6FLqUeL5tSQevXi-G02T_8sX8F1l0mwunN4WE/exec";
+    let todosOsDados = [];
 
-    function carregarDadosDireto() {
+    function carregarDados() {
       fetch(endpoint)
-        .then(r => r.json())
+        .then(res => res.json())
         .then(json => {
-          const dados = json.dados || [];
-
-          if (dados.length === 0) {
-            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
+          if (!json || !json.dados || json.dados.length === 0) {
+            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado disponível.";
             return;
           }
 
-          const colunas = Object.keys(dados[0]);
-
-          const headRow = document.getElementById("cabecalho");
-          headRow.innerHTML = "";
-          colunas.forEach(col => {
-            headRow.innerHTML += `<th>${col}</th>`;
-          });
-
-          const corpo = document.getElementById("conteudo");
-          corpo.innerHTML = "";
-          dados.forEach(linha => {
-            let row = "<tr>";
-            colunas.forEach(col => {
-              const valor = linha[col];
-              if (String(valor).includes("http")) {
-                row += `<td><a href="${valor}" target="_blank">🔗 Link</a></td>`;
-              } else {
-                row += `<td>${valor}</td>`;
-              }
-            });
-            row += "</tr>";
-            corpo.innerHTML += row;
-          });
-
-          document.getElementById("tabela").style.display = "table";
-          $('#tabela').DataTable({
-            destroy: true,
-            pageLength: 50,
-            dom: 'Bfrtip',
-            buttons: ['copy', 'csv', 'excel', 'pdf']
-          });
-
+          todosOsDados = json.dados;
+          montarTabela(todosOsDados);
           document.getElementById("statusMsg").innerText = "✅ Dados carregados com sucesso.";
         })
         .catch(err => {
@@ -88,8 +72,64 @@
         });
     }
 
-    // Carregar automaticamente ao abrir
-    window.onload = carregarDadosDireto;
+    function montarTabela(dados) {
+      const colunas = Object.keys(dados[0]);
+      const cabecalho = document.getElementById("cabecalho");
+      const corpo = document.getElementById("conteudo");
+
+      cabecalho.innerHTML = "";
+      corpo.innerHTML = "";
+
+      colunas.forEach(col => {
+        cabecalho.innerHTML += `<th>${col}</th>`;
+      });
+
+      dados.forEach(linha => {
+        let row = "<tr>";
+        colunas.forEach(col => {
+          const val = linha[col];
+          if (String(val).includes("http")) {
+            row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
+          } else {
+            row += `<td>${val}</td>`;
+          }
+        });
+        row += "</tr>";
+        corpo.innerHTML += row;
+      });
+
+      document.getElementById("tabela").style.display = "table";
+      $('#tabela').DataTable({
+        destroy: true,
+        pageLength: 50,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf']
+      });
+    }
+
+    function filtrarTabela() {
+      const faixaSelecionada = document.getElementById("faixaSelect").value;
+      if (faixaSelecionada === "Todos") {
+        montarTabela(todosOsDados);
+        return;
+      }
+
+      const dadosFiltrados = todosOsDados.filter(linha => {
+        const rank = parseInt(linha["Ranking"]);
+        if (faixaSelecionada === "Top1_40") return rank >= 1 && rank <= 40;
+        if (faixaSelecionada === "Top41_100") return rank >= 41 && rank <= 100;
+        if (faixaSelecionada === "Top101_200") return rank >= 101 && rank <= 200;
+        if (faixaSelecionada === "Top201_350") return rank >= 201 && rank <= 350;
+        if (faixaSelecionada === "Top351_600") return rank >= 351 && rank <= 600;
+        if (faixaSelecionada === "Top601_1000") return rank >= 601 && rank <= 1000;
+        if (faixaSelecionada === "Top1001_2000") return rank >= 1001 && rank <= 2000;
+        return false;
+      });
+
+      montarTabela(dadosFiltrados);
+    }
+
+    window.onload = carregarDados;
   </script>
 </body>
 </html>
