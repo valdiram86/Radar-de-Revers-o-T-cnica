@@ -24,11 +24,8 @@
     table { width: 100%; background: white; border-collapse: collapse; }
 
     .legenda span {
-      display: inline-block;
-      margin-right: 12px;
-      padding: 3px 8px;
-      border-radius: 5px;
-      font-size: 14px;
+      display: inline-block; margin-right: 12px;
+      padding: 3px 8px; border-radius: 5px; font-size: 14px;
     }
     .confirmado { background: #d4edda; }
     .rsi { background: #d0e7ff; }
@@ -54,6 +51,7 @@
   <div id="filtro">
     <label for="faixaSelect">Faixa de ranking:</label>
     <select id="faixaSelect" onchange="carregarDados()">
+      <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>
       <option value="Top1_100">Top 1–100</option>
       <option value="Top101_200">Top 101–200</option>
       <option value="Top201_350">Top 201–350</option>
@@ -102,7 +100,6 @@
       const url = `${endpointBase}?email=${email}&aba=${aba}`;
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
-
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -113,7 +110,6 @@
 
           todosOsDados = json.dados;
 
-          // 🔁 Destroi a instância anterior da tabela
           if ($.fn.DataTable.isDataTable('#tabela')) {
             $('#tabela').DataTable().clear().destroy();
           }
@@ -192,7 +188,6 @@
       montarTabela(filtrados);
     }
 
-    // Anotações pessoais
     const anotacoes = document.getElementById("anotacoes");
     anotacoes.value = localStorage.getItem("anotacoesSalvas") || "";
     anotacoes.addEventListener("input", () => {
