@@ -2,111 +2,197 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Radar Técnico por Faixa</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-    }
-    h2 {
-      margin-bottom: 15px;
-    }
-    select {
-      font-size: 16px;
-      padding: 5px;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      background-color: white;
-    }
-  </style>
-</head>
-<body>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📊 Radar de Reversão Técnica</title>
 
-  <h2>Radar Técnico – Faixas de Ranking</h2>
-
-  <label for="faixaSelect"><strong>Escolha a faixa:</strong></label>
-  <select id="faixaSelect">
-    <option value="Top1_40">Top 1–40</option>
-    <option value="Top41_100">Top 41–100</option>
-    <option value="Top101_200">Top 101–200</option>
-    <option value="Top201_350">Top 201–350</option>
-    <option value="Top351_600">Top 351–600</option>
-    <option value="Top601_1000">Top 601–1000</option>
-    <option value="Top1001_2000">Top 1001–2000</option>
-  </select>
-
-  <div style="overflow-x:auto;">
-    <table id="tabela" class="display nowrap">
-      <thead><tr id="cabecalho"></tr></thead>
-      <tbody id="corpo"></tbody>
-    </table>
-  </div>
-
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
+    h2 { margin-top: 0; }
+    #filtro, #selecionarCriptos { margin-bottom: 20px; }
+    select, input[type="text"] { padding: 6px; margin: 3px; width: 110px; }
+    textarea { width: 100%; height: 100px; padding: 10px; font-size: 14px; margin-top: 10px; }
+
+    .status { font-weight: bold; margin-bottom: 10px; }
+    table { width: 100%; background: white; border-collapse: collapse; }
+
+    .legenda span {
+      display: inline-block;
+      margin-right: 12px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .confirmado { background: #d4edda; }
+    .rsi { background: #d0e7ff; }
+    .atencao { background: #ffe4b5; }
+    .moderada { background: #ffc2c2; }
+    .forte { background: #ffaaaa; }
+    .neutro { background: #ffffcc; }
+  </style>
+</head>
+
+<body>
+  <h2>📊 Radar de Reversão Técnica</h2>
+
+  <div class="legenda">
+    <span class="confirmado">✅ Confirmado</span>
+    <span class="rsi">🟦 RSI baixo</span>
+    <span class="atencao">🟧 Atenção</span>
+    <span class="moderada">🟥 Queda moderada</span>
+    <span class="forte">🔴 Queda forte</span>
+    <span class="neutro">🟨 Neutro</span>
+  </div>
+
+  <div id="filtro">
+    <label for="faixaSelect">Faixa de ranking:</label>
+    <select id="faixaSelect" onchange="carregarDados()">
+      <option value="Top1_100">Top 1–100</option>
+      <option value="Top101_200">Top 101–200</option>
+      <option value="Top201_350">Top 201–350</option>
+      <option value="Top351_600">Top 351–600</option>
+      <option value="Top601_1000">Top 601–1000</option>
+      <option value="Top1001_1500">Top 1001–1500</option>
+      <option value="Top1501_2000">Top 1501–2000</option>
+      <option value="Top2001_2700">Top 2001–2700</option>
+    </select>
+  </div>
+
+  <div id="selecionarCriptos">
+    <label>Filtrar por símbolos (até 10):</label><br>
+    <div id="inputsContainer">
+      <input type="text" placeholder="Ex: BTC">
+      <input type="text" placeholder="Ex: ETH">
+      <input type="text" placeholder="Ex: ARB">
+      <input type="text" placeholder="Ex: MATIC">
+      <input type="text" placeholder="Ex: SOL">
+      <input type="text" placeholder="Ex: AVAX">
+      <input type="text" placeholder="Ex: XRP">
+      <input type="text" placeholder="Ex: DOGE">
+      <input type="text" placeholder="Ex: OP">
+      <input type="text" placeholder="Ex: PEPE">
+    </div>
+    <button onclick="filtrarPorSimbolos()">Aplicar Filtro</button>
+  </div>
+
+  <div class="status" id="statusMsg">Carregando dados...</div>
+
+  <table id="tabela" class="display" style="display:none">
+    <thead><tr id="cabecalho"></tr></thead>
+    <tbody id="conteudo"></tbody>
+  </table>
+
+  <h3>📝 Anotações Pessoais</h3>
+  <textarea id="anotacoes" placeholder="Digite aqui suas anotações..."></textarea>
 
   <script>
-    const BASE_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec';
+    const endpointBase = "https://script.google.com/macros/s/AKfycbwLZRTwWx17I0SgRvjqjifGQ52b_QtscU3AYHu30en1CunaPdcisYxMczNMy5AWpTmWEg/exec";
+    const email = "valdiram.lima.2013@gmail.com";
+    let todosOsDados = [];
 
-    function carregarDados(aba) {
-      fetch(`${BASE_URL}?aba=${aba}`)
-        .then(response => response.json())
-        .then(dados => {
-          if (!dados || dados.length === 0) {
-            alert("Nenhum dado encontrado para essa faixa.");
+    function carregarDados() {
+      const aba = document.getElementById("faixaSelect").value;
+      const url = `${endpointBase}?email=${email}&aba=${aba}`;
+
+      document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          if (!json || !json.dados || json.dados.length === 0) {
+            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
             return;
           }
 
-          const cabecalho = document.getElementById("cabecalho");
-          const corpo = document.getElementById("corpo");
-          cabecalho.innerHTML = '';
-          corpo.innerHTML = '';
-
-          dados[0].forEach(titulo => {
-            const th = document.createElement("th");
-            th.textContent = titulo;
-            cabecalho.appendChild(th);
-          });
-
-          dados.slice(1).forEach(linha => {
-            const tr = document.createElement("tr");
-            linha.forEach(celula => {
-              const td = document.createElement("td");
-              td.innerHTML = celula;
-              tr.appendChild(td);
-            });
-            corpo.appendChild(tr);
-          });
-
-          if ($.fn.DataTable.isDataTable('#tabela')) {
-            $('#tabela').DataTable().destroy();
-          }
-
-          $('#tabela').DataTable({
-            paging: false,
-            scrollX: true,
-            searching: false,
-            info: false
-          });
+          todosOsDados = json.dados;
+          montarTabela(todosOsDados);
+          document.getElementById("statusMsg").innerText = "✅ Dados carregados.";
         })
-        .catch(erro => {
-          console.error("Erro ao carregar:", erro);
-          alert("Erro ao buscar dados. Verifique o console.");
+        .catch(err => {
+          console.error(err);
+          document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
         });
     }
 
-    document.getElementById("faixaSelect").addEventListener("change", function () {
-      carregarDados(this.value);
+    function montarTabela(dados) {
+      const colunas = Object.keys(dados[0]);
+      const cabecalho = document.getElementById("cabecalho");
+      const corpo = document.getElementById("conteudo");
+      cabecalho.innerHTML = "";
+      corpo.innerHTML = "";
+
+      colunas.forEach(col => cabecalho.innerHTML += `<th>${col}</th>`);
+
+      dados.forEach(linha => {
+        let row = "<tr>";
+        colunas.forEach(col => {
+          const val = linha[col];
+          if (String(val).includes("http")) {
+            row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
+          } else if (col === "Score Técnico") {
+            const score = parseFloat(val);
+            let cor = "#fff";
+            if (score >= 80) cor = "#006400";
+            else if (score >= 60) cor = "#32CD32";
+            else if (score >= 40) cor = "#FFFF00";
+            else if (score >= 20) cor = "#FFA500";
+            else cor = "#FF6347";
+            row += `<td style="background:${cor}; font-weight:bold;">${val}</td>`;
+          } else if (col === "Status") {
+            let corStatus = "#ffffff";
+            if (val.includes("✅")) corStatus = "#d4edda";
+            else if (val.includes("🟦")) corStatus = "#d0e7ff";
+            else if (val.includes("🟧")) corStatus = "#ffe4b5";
+            else if (val.includes("🟥")) corStatus = "#ffc2c2";
+            else if (val.includes("🔴")) corStatus = "#ffaaaa";
+            else if (val.includes("🟨")) corStatus = "#ffffcc";
+            row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
+          } else {
+            row += `<td>${val}</td>`;
+          }
+        });
+        row += "</tr>";
+        corpo.innerHTML += row;
+      });
+
+      document.getElementById("tabela").style.display = "table";
+      $('#tabela').DataTable({
+        destroy: true,
+        paging: false,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf']
+      });
+    }
+
+    function filtrarPorSimbolos() {
+      const inputs = document.querySelectorAll('#inputsContainer input');
+      const simbolos = Array.from(inputs)
+        .map(i => i.value.trim().toUpperCase())
+        .filter(v => v !== "");
+
+      if (simbolos.length === 0) {
+        montarTabela(todosOsDados);
+        return;
+      }
+
+      const filtrados = todosOsDados.filter(linha => simbolos.includes(String(linha["Símbolo"]).toUpperCase()));
+      montarTabela(filtrados);
+    }
+
+    // Anotações pessoais
+    const anotacoes = document.getElementById("anotacoes");
+    anotacoes.value = localStorage.getItem("anotacoesSalvas") || "";
+    anotacoes.addEventListener("input", () => {
+      localStorage.setItem("anotacoesSalvas", anotacoes.value);
     });
 
-    // Carrega faixa padrão ao abrir
-    window.onload = () => carregarDados('Top1_40');
+    window.onload = carregarDados;
   </script>
-
 </body>
 </html>
