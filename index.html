@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reversal Volume Scanner</title>
+  <title>📊 Radar de Reversão Técnica</title>
 
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
@@ -20,11 +20,37 @@
     select { padding: 6px; }
     .status { font-weight: bold; margin-bottom: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
+
+    .legenda {
+      margin-bottom: 10px;
+    }
+    .legenda span {
+      display: inline-block;
+      margin-right: 12px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .confirmado { background: #d4edda; }
+    .rsi { background: #d0e7ff; }
+    .atencao { background: #ffe4b5; }
+    .moderada { background: #ffc2c2; }
+    .forte { background: #ffaaaa; }
+    .neutro { background: #ffffcc; }
   </style>
 </head>
 
 <body>
-  <h2>📈 Reversal Volume Scanner</h2>
+  <h2>📊 Radar de Reversão Técnica</h2>
+
+  <div class="legenda">
+    <span class="confirmado">✅ Confirmado</span>
+    <span class="rsi">🟦 RSI baixo</span>
+    <span class="atencao">🟧 Atenção</span>
+    <span class="moderada">🟥 Queda moderada</span>
+    <span class="forte">🔴 Queda forte</span>
+    <span class="neutro">🟨 Neutro</span>
+  </div>
 
   <div id="filtro">
     <label for="faixaSelect">Filtrar por faixa de ranking:</label>
@@ -43,14 +69,12 @@
   <div class="status" id="statusMsg">Carregando dados...</div>
 
   <table id="tabela" class="display" style="display:none">
-    <thead>
-      <tr id="cabecalho"></tr>
-    </thead>
+    <thead><tr id="cabecalho"></tr></thead>
     <tbody id="conteudo"></tbody>
   </table>
 
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbyt9VqpHPFrLFpjp4Xvkjw2MHt2Dz_IwG9rtHCQBQNJ9iBBlQP0Fi_c0M3YV8qGRzcmcQ/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbzQwgm1IcDrBwUkYJFdhNzKlk8PFES6FLqUeL5tSQevXi-G02T_8sX8F1l0mwunN4WE/exec";
     let todosOsDados = [];
 
     function carregarDados() {
@@ -90,6 +114,24 @@
           const val = linha[col];
           if (String(val).includes("http")) {
             row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
+          } else if (col === "Score Técnico") {
+            const score = parseFloat(val);
+            let cor = "#fff";
+            if (score >= 80) cor = "#006400";
+            else if (score >= 60) cor = "#32CD32";
+            else if (score >= 40) cor = "#FFFF00";
+            else if (score >= 20) cor = "#FFA500";
+            else cor = "#FF6347";
+            row += `<td style="background:${cor}; font-weight:bold;">${val}</td>`;
+          } else if (col === "Status") {
+            let corStatus = "#ffffff";
+            if (val.includes("✅")) corStatus = "#d4edda";
+            else if (val.includes("🟦")) corStatus = "#d0e7ff";
+            else if (val.includes("🟧")) corStatus = "#ffe4b5";
+            else if (val.includes("🟥")) corStatus = "#ffc2c2";
+            else if (val.includes("🔴")) corStatus = "#ffaaaa";
+            else if (val.includes("🟨")) corStatus = "#ffffcc";
+            row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
           } else {
             row += `<td>${val}</td>`;
           }
@@ -101,7 +143,7 @@
       document.getElementById("tabela").style.display = "table";
       $('#tabela').DataTable({
         destroy: true,
-        paging: false, // 👈 DESATIVA paginação
+        paging: false,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf']
       });
@@ -114,18 +156,22 @@
         return;
       }
 
+      const faixaMap = {
+        "Top1_40": [1, 40],
+        "Top41_100": [41, 100],
+        "Top101_200": [101, 200],
+        "Top201_350": [201, 350],
+        "Top351_600": [351, 600],
+        "Top601_1000": [601, 1000],
+        "Top1001_2000": [1001, 2000]
+      };
+
+      const [min, max] = faixaMap[faixaSelecionada] || [1, 2000];
+
       const dadosFiltrados = todosOsDados.filter(linha => {
         const raw = linha["Ranking"];
-        const rank = parseInt(String(raw).replace(/\D/g, '')) || 0;
-
-        if (faixaSelecionada === "Top1_40") return rank >= 1 && rank <= 40;
-        if (faixaSelecionada === "Top41_100") return rank >= 41 && rank <= 100;
-        if (faixaSelecionada === "Top101_200") return rank >= 101 && rank <= 200;
-        if (faixaSelecionada === "Top201_350") return rank >= 201 && rank <= 350;
-        if (faixaSelecionada === "Top351_600") return rank >= 351 && rank <= 600;
-        if (faixaSelecionada === "Top601_1000") return rank >= 601 && rank <= 1000;
-        if (faixaSelecionada === "Top1001_2000") return rank >= 1001 && rank <= 2000;
-        return false;
+        const rank = parseInt(String(raw).replace(/\D/g, "")) || 0;
+        return rank >= min && rank <= max;
       });
 
       montarTabela(dadosFiltrados);
