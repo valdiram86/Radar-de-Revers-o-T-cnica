@@ -17,17 +17,14 @@
     body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
     h2 { margin-top: 0; }
     #filtro { margin-bottom: 20px; }
-    select, button { padding: 6px; margin-right: 10px; }
-    .status { font-weight: bold; margin-bottom: 10px; }
+    select, button { padding: 6px; margin-left: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
 
-    .legenda {
-      margin-bottom: 15px;
-    }
+    .legenda { margin-bottom: 10px; }
     .legenda span {
       display: inline-block;
       margin-right: 12px;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 5px;
       font-size: 14px;
     }
@@ -37,6 +34,7 @@
     .moderada { background: #ffc2c2; }
     .forte { background: #ffaaaa; }
     .neutro { background: #ffffcc; }
+    .status { font-weight: bold; margin-bottom: 10px; }
   </style>
 </head>
 
@@ -64,7 +62,7 @@
       <option value="Top601_1000">Top 601–1000</option>
       <option value="Top1001_2000">Top 1001–2000</option>
     </select>
-    <button onclick="filtrarTabela()">🔍 Buscar</button>
+    <button onclick="filtrarTabela()">Buscar</button>
   </div>
 
   <div class="status" id="statusMsg">Carregando dados...</div>
@@ -98,7 +96,7 @@
     }
 
     function montarTabela(dados) {
-      const colunas = Object.keys(dados[0]).filter(col => col.toLowerCase() !== "status");
+      const colunas = Object.keys(dados[0]);
       const cabecalho = document.getElementById("cabecalho");
       const corpo = document.getElementById("conteudo");
 
@@ -163,7 +161,7 @@
       const dadosFiltrados = todosOsDados.filter(linha => {
         const rankingColuna = Object.keys(linha).find(c => c.toLowerCase().includes("rank"));
         const raw = linha[rankingColuna];
-        const rank = parseInt(String(raw).replace(/\D/g, "")) || 0;
+        const rank = Number(String(raw).match(/\d+/)?.[0] || 0);
         return rank >= min && rank <= max;
       });
 
