@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reversal Volume Scanner</title>
 
-  <!-- DataTables -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -20,6 +19,7 @@
     #filtro { margin-bottom: 20px; }
     select { padding: 6px; }
     .status { font-weight: bold; margin-bottom: 10px; }
+    table { width: 100%; background: white; border-collapse: collapse; }
   </style>
 </head>
 
@@ -42,7 +42,7 @@
 
   <div class="status" id="statusMsg">Carregando dados...</div>
 
-  <table id="tabela" class="display" style="width:100%; display:none;">
+  <table id="tabela" class="display" style="display:none">
     <thead>
       <tr id="cabecalho"></tr>
     </thead>
@@ -50,7 +50,7 @@
   </table>
 
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbyt9VqpHPFrLFpjp4Xvkjw2MHt2Dz_IwG9rtHCQBQNJ9iBBlQP0Fi_c0M3YV8qGRzcmcQ/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbzQwgm1IcDrBwUkYJFdhNzKlk8PFES6FLqUeL5tSQevXi-G02T_8sX8F1l0mwunN4WE/exec";
     let todosOsDados = [];
 
     function carregarDados() {
@@ -101,7 +101,7 @@
       document.getElementById("tabela").style.display = "table";
       $('#tabela').DataTable({
         destroy: true,
-        pageLength: 50,
+        paging: false, // 👈 DESATIVA paginação
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf']
       });
@@ -115,7 +115,9 @@
       }
 
       const dadosFiltrados = todosOsDados.filter(linha => {
-        const rank = parseInt(linha["Ranking"]);
+        const raw = linha["Ranking"];
+        const rank = parseInt(String(raw).replace(/\D/g, '')) || 0;
+
         if (faixaSelecionada === "Top1_40") return rank >= 1 && rank <= 40;
         if (faixaSelecionada === "Top41_100") return rank >= 41 && rank <= 100;
         if (faixaSelecionada === "Top101_200") return rank >= 101 && rank <= 200;
