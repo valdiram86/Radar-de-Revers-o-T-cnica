@@ -99,9 +99,10 @@
 
     function carregarDados() {
       const aba = document.getElementById("faixaSelect").value;
-      const url = `${endpointBase}?email=${email}&aba=${aba}`; // ✅ LINHA CORRIGIDA
+      const url = `${endpointBase}?email=${email}&aba=${aba}`;
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
+
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -111,6 +112,12 @@
           }
 
           todosOsDados = json.dados;
+
+          // 🔁 Destroi a instância anterior da tabela
+          if ($.fn.DataTable.isDataTable('#tabela')) {
+            $('#tabela').DataTable().clear().destroy();
+          }
+
           montarTabela(todosOsDados);
           document.getElementById("statusMsg").innerText = "✅ Dados carregados.";
         })
