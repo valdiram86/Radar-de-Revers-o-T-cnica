@@ -2,10 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Scanner – Faixas de Ranking</title>
+  <title>Scanner Cripto – Faixa 1 a 40</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,35 +18,15 @@
       width: 100%;
       background-color: white;
     }
-    select {
-      margin-bottom: 20px;
-      padding: 5px;
-      font-size: 16px;
-    }
-    .tabela-container {
-      overflow-x: auto;
-    }
   </style>
 </head>
 <body>
 
-  <h2>Scanner Cripto – Faixas de Ranking</h2>
+  <h2>Scanner Cripto – Faixa 1 a 40</h2>
 
-  <label for="abaSelector"><strong>Escolha a faixa:</strong></label>
-  <select id="abaSelector">
-    <option value="Faixa1_40">1 a 40</option>
-    <option value="Faixa41_100">41 a 100</option>
-    <option value="Faixa101_250">101 a 250</option>
-    <option value="Faixa251_500">251 a 500</option>
-    <option value="Faixa501_1000">501 a 1000</option>
-    <option value="Faixa1001_1500">1001 a 1500</option>
-  </select>
-
-  <div class="tabela-container">
+  <div style="overflow-x:auto;">
     <table id="tabela" class="display nowrap">
-      <thead>
-        <tr id="cabecalho"></tr>
-      </thead>
+      <thead><tr id="cabecalho"></tr></thead>
       <tbody id="corpo"></tbody>
     </table>
   </div>
@@ -56,60 +35,52 @@
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwjqgt2eQ4J7IRwmLYiCFzgbK0znpEoTCl0Ns6j2boJfu0X4oNJM7yyZE41G1v_3eV4PA/exec?aba=Faixa1_40';
 
-    document.getElementById('abaSelector').addEventListener('change', () => {
-      const abaSelecionada = document.getElementById('abaSelector').value;
-      carregarDados(abaSelecionada);
-    });
+    fetch(API_URL)
+      .then(response => response.json())
+      .then(dados => {
+        if (!dados || dados.length === 0) {
+          alert("Nenhum dado encontrado.");
+          return;
+        }
 
-    function carregarDados(aba) {
-      fetch(`${API_URL}?aba=${aba}`)
-        .then(response => response.json())
-        .then(dados => {
-          if (!dados || !dados.length) return;
+        const cabecalho = document.getElementById("cabecalho");
+        const corpo = document.getElementById("corpo");
 
-          const colunas = dados[0];
-          const linhas = dados.slice(1);
+        cabecalho.innerHTML = '';
+        corpo.innerHTML = '';
 
-          const cabecalho = document.getElementById('cabecalho');
-          const corpo = document.getElementById('corpo');
-
-          cabecalho.innerHTML = '';
-          corpo.innerHTML = '';
-
-          colunas.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col;
-            cabecalho.appendChild(th);
-          });
-
-          linhas.forEach(linha => {
-            const tr = document.createElement('tr');
-            linha.forEach(celula => {
-              const td = document.createElement('td');
-              td.innerHTML = celula;
-              tr.appendChild(td);
-            });
-            corpo.appendChild(tr);
-          });
-
-          if ($.fn.DataTable.isDataTable('#tabela')) {
-            $('#tabela').DataTable().destroy();
-          }
-
-          $('#tabela').DataTable({
-            paging: false,
-            scrollX: true,
-            scrollCollapse: true,
-            info: false,
-            searching: false
-          });
+        // Cabeçalho
+        dados[0].forEach(coluna => {
+          const th = document.createElement("th");
+          th.textContent = coluna;
+          cabecalho.appendChild(th);
         });
-    }
 
-    // Carrega a primeira aba automaticamente
-    window.onload = () => carregarDados('Faixa1_40');
+        // Corpo
+        dados.slice(1).forEach(linha => {
+          const tr = document.createElement("tr");
+          linha.forEach(celula => {
+            const td = document.createElement("td");
+            td.innerHTML = celula;
+            tr.appendChild(td);
+          });
+          corpo.appendChild(tr);
+        });
+
+        // Iniciar DataTable
+        $('#tabela').DataTable({
+          paging: false,
+          scrollX: true,
+          searching: false,
+          info: false
+        });
+      })
+      .catch(erro => {
+        console.error("Erro ao carregar dados:", erro);
+        alert("Erro ao carregar dados.");
+      });
   </script>
 </body>
 </html>
