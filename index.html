@@ -17,44 +17,18 @@
     body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
     h2 { margin-top: 0; }
     #filtro { margin-bottom: 20px; }
-    select { padding: 6px; }
+    select, button { padding: 6px; margin-right: 10px; }
     .status { font-weight: bold; margin-bottom: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
-
-    .legenda {
-      margin-bottom: 10px;
-    }
-    .legenda span {
-      display: inline-block;
-      margin-right: 12px;
-      padding: 3px 8px;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-    .confirmado { background: #d4edda; }
-    .rsi { background: #d0e7ff; }
-    .atencao { background: #ffe4b5; }
-    .moderada { background: #ffc2c2; }
-    .forte { background: #ffaaaa; }
-    .neutro { background: #ffffcc; }
   </style>
 </head>
 
 <body>
   <h2>📊 Radar de Reversão Técnica</h2>
 
-  <div class="legenda">
-    <span class="confirmado">✅ Confirmado</span>
-    <span class="rsi">🟦 RSI baixo</span>
-    <span class="atencao">🟧 Atenção</span>
-    <span class="moderada">🟥 Queda moderada</span>
-    <span class="forte">🔴 Queda forte</span>
-    <span class="neutro">🟨 Neutro</span>
-  </div>
-
   <div id="filtro">
     <label for="faixaSelect">Filtrar por faixa de ranking:</label>
-    <select id="faixaSelect" onchange="filtrarTabela()">
+    <select id="faixaSelect">
       <option value="Todos">Todos</option>
       <option value="Top1_40">Top 1–40</option>
       <option value="Top41_100">Top 41–100</option>
@@ -64,6 +38,7 @@
       <option value="Top601_1000">Top 601–1000</option>
       <option value="Top1001_2000">Top 1001–2000</option>
     </select>
+    <button onclick="filtrarTabela()">🔍 Buscar</button>
   </div>
 
   <div class="status" id="statusMsg">Carregando dados...</div>
@@ -97,7 +72,7 @@
     }
 
     function montarTabela(dados) {
-      const colunas = Object.keys(dados[0]);
+      const colunas = Object.keys(dados[0]).filter(col => col !== "Status"); // remove Status
       const cabecalho = document.getElementById("cabecalho");
       const corpo = document.getElementById("conteudo");
 
@@ -123,15 +98,6 @@
             else if (score >= 20) cor = "#FFA500";
             else cor = "#FF6347";
             row += `<td style="background:${cor}; font-weight:bold;">${val}</td>`;
-          } else if (col === "Status") {
-            let corStatus = "#ffffff";
-            if (val.includes("✅")) corStatus = "#d4edda";
-            else if (val.includes("🟦")) corStatus = "#d0e7ff";
-            else if (val.includes("🟧")) corStatus = "#ffe4b5";
-            else if (val.includes("🟥")) corStatus = "#ffc2c2";
-            else if (val.includes("🔴")) corStatus = "#ffaaaa";
-            else if (val.includes("🟨")) corStatus = "#ffffcc";
-            row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
           } else {
             row += `<td>${val}</td>`;
           }
