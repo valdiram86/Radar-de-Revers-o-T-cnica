@@ -95,6 +95,15 @@
     const email = "valdiram.lima.2013@gmail.com";
     let todosOsDados = [];
 
+    function formatarAbreviado(num) {
+      if (isNaN(num)) return "-";
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+      return num.toFixed(2);
+    }
+
     function carregarDados() {
       const aba = document.getElementById("faixaSelect").value;
       const url = `${endpointBase}?email=${email}&aba=${aba}`;
@@ -156,6 +165,10 @@
             else if (val.includes("🔴")) corStatus = "#ffaaaa";
             else if (val.includes("🟨")) corStatus = "#ffffcc";
             row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
+          } else if (col === "Volume 24h") {
+            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
+            const formatado = formatarAbreviado(num);
+            row += `<td>$${formatado}</td>`;
           } else {
             row += `<td>${val}</td>`;
           }
