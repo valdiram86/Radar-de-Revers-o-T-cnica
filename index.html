@@ -19,8 +19,10 @@
     #filtro, #selecionarCriptos { margin-bottom: 20px; }
     select, input[type="text"] { padding: 6px; margin: 3px; width: 110px; }
     textarea { width: 100%; height: 100px; padding: 10px; font-size: 14px; margin-top: 10px; }
+
     .status { font-weight: bold; margin-bottom: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
+
     .legenda span {
       display: inline-block; margin-right: 12px;
       padding: 3px 8px; border-radius: 5px; font-size: 14px;
@@ -108,12 +110,8 @@
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
       fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          return res.json();
-        })
+        .then(res => res.json())
         .then(json => {
-          console.log("Resposta JSON:", json);
           if (!json || !json.dados || json.dados.length === 0) {
             document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
             return;
@@ -129,8 +127,8 @@
           document.getElementById("statusMsg").innerText = "✅ Dados carregados.";
         })
         .catch(err => {
-          console.error("Erro ao carregar dados:", err);
-          document.getElementById("statusMsg").innerText = `❌ Erro ao carregar dados: ${err.message}`;
+          console.error(err);
+          document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
         });
     }
 
@@ -145,18 +143,19 @@
 
       dados.forEach(linha => {
         let row = "<tr>";
-        let linhaVolume = null;
-        let linhaMarketCap = null;
-
         colunas.forEach(col => {
           const val = linha[col];
-
-          if (col === "Volume") {
-            linhaVolume = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
-            row += `<td data-volume="true">${val}</td>`;
-          } else if (col === "Market Cap") {
-            linhaMarketCap = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
-            row += `<td>${val}</td>`;
+          if (String(val).includes("http")) {
+            row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
+          } else if (col === "Score Técnico") {
+            const score = parseFloat(val);
+            let cor = "#fff";
+            if (score >= 80) cor = "#006400";
+            else if (score >= 60) cor = "#32CD32";
+            else if (score >= 40) cor = "#FFFF00";
+            else if (score >= 20) cor = "#FFA500";
+            else cor = "#FF6347";
+            row += `<td style="background:${cor}; font-weight:bold;">${val}</td>`;
           } else if (col === "Status") {
             let corStatus = "#ffffff";
             if (val.includes("✅")) corStatus = "#d4edda";
@@ -166,10 +165,49 @@
             else if (val.includes("🔴")) corStatus = "#ffaaaa";
             else if (val.includes("🟨")) corStatus = "#ffffcc";
             row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
+          } else if (col === "Volume") {
+            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
+            const formatado = formatarAbreviado(num);
+            row += `<td>$${formatado}</td>`;
           } else {
             row += `<td>${val}</td>`;
           }
         });
-
         row += "</tr>";
-        corpo.innerHTML += row
+        corpo.innerHTML += row;
+      });
+
+      document.getElementById("tabela").style.display = "table";
+      $('#tabela').DataTable({
+        destroy: true,
+        paging: false,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf']
+      });
+    }
+
+    function filtrarPorSimbolos() {
+      const inputs = document.querySelectorAll('#inputsContainer input');
+      const simbolos = Array.from(inputs)
+        .map(i => i.value.trim().toUpperCase())
+        .filter(v => v !== "");
+
+      if (simbolos.length === 0) {
+        montarTabela(todosOsDados);
+        return;
+      }
+
+      const filtrados = todosOsDados.filter(linha => simbolos.includes(String(linha["Símbolo"]).toUpperCase()));
+      montarTabela(filtrados);
+    }
+
+    const anotacoes = document.getElementById("anotacoes");
+    anotacoes.value = localStorage.getItem("anotacoesSalvas") || "";
+    anotacoes.addEventListener("input", () => {
+      localStorage.setItem("anotacoesSalvas", anotacoes.value);
+    });
+
+    window.onload = carregarDados;
+  </script>
+</body>
+</html>
