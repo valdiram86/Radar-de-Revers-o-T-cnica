@@ -165,7 +165,7 @@
             else if (val.includes("🔴")) corStatus = "#ffaaaa";
             else if (val.includes("🟨")) corStatus = "#ffffcc";
             row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
-          } else if (col === "Volume 24h") {
+          } else if (col === "Volume") {
             const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
             const formatado = formatarAbreviado(num);
             row += `<td>$${formatado}</td>`;
