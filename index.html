@@ -108,8 +108,12 @@
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
       fetch(url)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.json();
+        })
         .then(json => {
+          console.log("Resposta JSON:", json);
           if (!json || !json.dados || json.dados.length === 0) {
             document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
             return;
@@ -125,8 +129,8 @@
           document.getElementById("statusMsg").innerText = "✅ Dados carregados.";
         })
         .catch(err => {
-          console.error(err);
-          document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
+          console.error("Erro ao carregar dados:", err);
+          document.getElementById("statusMsg").innerText = `❌ Erro ao carregar dados: ${err.message}`;
         });
     }
 
@@ -168,19 +172,4 @@
         });
 
         row += "</tr>";
-        corpo.innerHTML += row;
-
-        // aplica cor dinâmica na célula volume
-        const ultimaLinha = corpo.lastElementChild;
-        const celulas = ultimaLinha.querySelectorAll("td");
-        celulas.forEach(cel => {
-          if (cel.getAttribute("data-volume") && linhaVolume && linhaMarketCap && linhaMarketCap > 0) {
-            const ratio = linhaVolume / linhaMarketCap;
-            let cor = "#ffffff";
-            if (ratio >= 1.0) cor = "#ffaaaa";       // vermelho
-            else if (ratio >= 0.3) cor = "#d4edda";  // verde
-            else if (ratio >= 0.1) cor = "#ffffcc";  // amarelo
-            else cor = "#eeeeee";                    // cinza
-            cel.style.background = cor;
-            cel.innerHTML = `$${formatarAbreviado(linhaVolume)} <small style="color:#555;">(${ratio.toFixed(2)})</small>`;
-          }
+        corpo.innerHTML += row
