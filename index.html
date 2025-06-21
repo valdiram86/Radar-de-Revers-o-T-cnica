@@ -16,6 +16,9 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; zoom: 90%; }
     h2 { margin-top: 0; }
+    #filtro, #selecionarCriptos { margin-bottom: 20px; }
+    select, input[type="text"] { padding: 6px; margin: 3px; width: 110px; }
+    textarea { width: 100%; height: 100px; padding: 10px; font-size: 14px; margin-top: 10px; }
     .status { font-weight: bold; margin-bottom: 10px; }
     table { width: 100%; background: white; border-collapse: collapse; }
     .legenda span {
@@ -43,12 +46,47 @@
     <span class="neutro">🟨 Neutro</span>
   </div>
 
+  <div id="filtro">
+    <label for="faixaSelect">Faixa de ranking:</label>
+    <select id="faixaSelect" onchange="carregarDados()">
+      <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>
+      <option value="Top1_100">Top 1–100</option>
+      <option value="Top101_200">Top 101–200</option>
+      <option value="Top201_350">Top 201–350</option>
+      <option value="Top351_600">Top 351–600</option>
+      <option value="Top601_1000">Top 601–1000</option>
+      <option value="Top1001_1500">Top 1001–1500</option>
+      <option value="Top1501_2000">Top 1501–2000</option>
+      <option value="Top2001_2700">Top 2001–2700</option>
+    </select>
+  </div>
+
+  <div id="selecionarCriptos">
+    <label>Filtrar por símbolos (até 10):</label><br>
+    <div id="inputsContainer">
+      <input type="text" placeholder="Ex: BTC">
+      <input type="text" placeholder="Ex: ETH">
+      <input type="text" placeholder="Ex: ARB">
+      <input type="text" placeholder="Ex: MATIC">
+      <input type="text" placeholder="Ex: SOL">
+      <input type="text" placeholder="Ex: AVAX">
+      <input type="text" placeholder="Ex: XRP">
+      <input type="text" placeholder="Ex: DOGE">
+      <input type="text" placeholder="Ex: OP">
+      <input type="text" placeholder="Ex: PEPE">
+    </div>
+    <button onclick="filtrarPorSimbolos()">Aplicar Filtro</button>
+  </div>
+
   <div class="status" id="statusMsg">Carregando dados...</div>
 
   <table id="tabela" class="display" style="display:none">
     <thead><tr id="cabecalho"></tr></thead>
     <tbody id="conteudo"></tbody>
   </table>
+
+  <h3>📝 Anotações Pessoais</h3>
+  <textarea id="anotacoes" placeholder="Digite aqui suas anotações..."></textarea>
 
   <script>
     const endpointBase = "https://script.google.com/macros/s/AKfycbwLZRTwWx17I0SgRvjqjifGQ52b_QtscU3AYHu30en1CunaPdcisYxMczNMy5AWpTmWEg/exec";
@@ -65,7 +103,8 @@
     }
 
     function carregarDados() {
-      const url = `${endpointBase}?email=${email}&aba=OportunidadeVolume`;
+      const aba = document.getElementById("faixaSelect").value;
+      const url = `${endpointBase}?email=${email}&aba=${aba}`;
 
       document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
       fetch(url)
@@ -99,7 +138,6 @@
       corpo.innerHTML = "";
 
       colunas.forEach(col => cabecalho.innerHTML += `<th>${col}</th>`);
-      cabecalho.innerHTML += `<th>Vol/Cap</th>`; // nova coluna
 
       dados.forEach(linha => {
         let row = "<tr>";
@@ -108,46 +146,41 @@
 
         colunas.forEach(col => {
           const val = linha[col];
+
           if (col === "Volume") {
-            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
-            linhaVolume = num;
-            row += `<td>$${formatarAbreviado(num)}</td>`;
+            linhaVolume = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
+            row += `<td data-volume="true">${val}</td>`;
           } else if (col === "Market Cap") {
-            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
-            linhaMarketCap = num;
-            row += `<td>$${formatarAbreviado(num)}</td>`;
+            linhaMarketCap = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
+            row += `<td>${val}</td>`;
+          } else if (col === "Status") {
+            let corStatus = "#ffffff";
+            if (val.includes("✅")) corStatus = "#d4edda";
+            else if (val.includes("🟦")) corStatus = "#d0e7ff";
+            else if (val.includes("🟧")) corStatus = "#ffe4b5";
+            else if (val.includes("🟥")) corStatus = "#ffc2c2";
+            else if (val.includes("🔴")) corStatus = "#ffaaaa";
+            else if (val.includes("🟨")) corStatus = "#ffffcc";
+            row += `<td style="background:${corStatus}; font-weight:bold;">${val}</td>`;
           } else {
             row += `<td>${val}</td>`;
           }
         });
 
-        // cálculo da relação Volume / MarketCap
-        if (linhaVolume && linhaMarketCap && linhaMarketCap > 0) {
-          const ratio = linhaVolume / linhaMarketCap;
-          let cor = "#ffffff";
-          if (ratio >= 1.0) cor = "#ffaaaa";       // vermelho
-          else if (ratio >= 0.3) cor = "#d4edda";  // verde
-          else if (ratio >= 0.1) cor = "#ffffcc";  // amarelo
-          else cor = "#eeeeee";                    // cinza
-          row += `<td style="background:${cor}; font-weight:bold;">${ratio.toFixed(2)}</td>`;
-        } else {
-          row += `<td style="background:#eee;">–</td>`;
-        }
-
         row += "</tr>";
         corpo.innerHTML += row;
-      });
 
-      document.getElementById("tabela").style.display = "table";
-      $('#tabela').DataTable({
-        destroy: true,
-        paging: false,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf']
-      });
-    }
-
-    window.onload = carregarDados;
-  </script>
-</body>
-</html>
+        // aplica cor dinâmica na célula volume
+        const ultimaLinha = corpo.lastElementChild;
+        const celulas = ultimaLinha.querySelectorAll("td");
+        celulas.forEach(cel => {
+          if (cel.getAttribute("data-volume") && linhaVolume && linhaMarketCap && linhaMarketCap > 0) {
+            const ratio = linhaVolume / linhaMarketCap;
+            let cor = "#ffffff";
+            if (ratio >= 1.0) cor = "#ffaaaa";       // vermelho
+            else if (ratio >= 0.3) cor = "#d4edda";  // verde
+            else if (ratio >= 0.1) cor = "#ffffcc";  // amarelo
+            else cor = "#eeeeee";                    // cinza
+            cel.style.background = cor;
+            cel.innerHTML = `$${formatarAbreviado(linhaVolume)} <small style="color:#555;">(${ratio.toFixed(2)})</small>`;
+          }
