@@ -6,7 +6,7 @@
   <title>SentinelX – Detecte o invisível. Execute com precisão.</title>
 
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/2752/2752761.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -17,67 +17,98 @@
 
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f2f2f2;
-      color: #222;
+      font-family: 'Orbitron', sans-serif;
+      background: #0b0b0b;
+      color: #ccc;
       padding: 20px;
       zoom: 90%;
     }
-    h2 {
-      margin-top: 0;
-      font-size: 32px;
-      color: #111;
-      font-weight: 700;
+
+    .titulo-sentinel {
       display: flex;
       align-items: center;
       gap: 12px;
+      margin-top: 0;
+      flex-wrap: wrap;
     }
-    h2 img {
+
+    .titulo-sentinel img {
       height: 48px;
       width: auto;
       border-radius: 6px;
     }
-    h2 span {
-      font-weight: 400;
-      font-size: 18px;
-      margin-left: 8px;
-      color: #555;
+
+    .titulo-texto {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
     }
+
+    .titulo-principal {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ccc;
+      text-shadow: 0 0 6px #999, 0 0 12px #666;
+      animation: brilhoCinza 2.5s ease-in-out infinite;
+    }
+
+    .titulo-sub {
+      font-size: 14px;
+      font-weight: 400;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    @keyframes brilhoCinza {
+      0%, 100% {
+        text-shadow: 0 0 6px #999, 0 0 12px #666;
+      }
+      50% {
+        text-shadow: 0 0 10px #bbb, 0 0 20px #777;
+      }
+    }
+
     #filtro select {
-      background: #fff;
-      color: #222;
+      background: #222;
+      color: #ccc;
       padding: 6px;
-      border: 1px solid #aaa;
+      border: 1px solid #555;
       border-radius: 4px;
     }
+
     table.dataTable {
-      background-color: #fff;
-      color: #111;
+      background-color: #1b1b1b;
+      color: #ddd;
     }
+
     table.dataTable th, table.dataTable td {
-      border: 1px solid #ccc;
+      border: 1px solid #444;
       padding: 8px;
     }
+
     table.dataTable tr:hover {
-      background-color: #f0f0f0;
+      background-color: #333;
     }
+
     .status {
       font-weight: bold;
-      margin: 10px 0;
+      margin-bottom: 10px;
     }
+
     textarea {
       width: 100%;
       height: 100px;
       padding: 10px;
-      background: #eaeaea;
-      color: #222;
-      border: 1px solid #aaa;
+      background: #111;
+      color: #ccc;
+      border: 1px solid #333;
       font-size: 14px;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Orbitron', monospace;
     }
+
     .spinner {
-      border: 4px solid #ccc;
-      border-top: 4px solid #007BFF;
+      border: 4px solid #222;
+      border-top: 4px solid #888;
       border-radius: 50%;
       width: 24px;
       height: 24px;
@@ -86,23 +117,30 @@
       vertical-align: middle;
       margin-right: 8px;
     }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
     @media (max-width: 600px) {
       body {
         zoom: 100%;
         padding: 10px;
       }
-      h2 {
-        font-size: 24px;
+      .titulo-sentinel {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
       }
-      h2 img {
-        height: 36px;
-        margin-bottom: 8px;
+      .titulo-texto {
+        align-items: center;
+      }
+      .titulo-principal {
+        font-size: 26px;
+      }
+      .titulo-sub {
+        font-size: 13px;
       }
       table.dataTable {
         font-size: 12px;
@@ -112,14 +150,17 @@
 </head>
 
 <body>
-  <h2>
-    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="Inteligência Artificial SentinelX">
-    SentinelX <span>Detecte o invisível. Execute com precisão.</span>
+  <h2 class="titulo-sentinel">
+    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="Inteligência Artificial SentinelX" />
+    <div class="titulo-texto">
+      <span class="titulo-principal">SentinelX</span>
+      <span class="titulo-sub">Detecte o invisível. Execute com precisão.</span>
+    </div>
   </h2>
 
   <div id="filtro">
     <label for="faixaSelect">Faixa de ranking:</label>
-    <select id="faixaSelect" onchange="carregarDados()">
+    <select id="faixaSelect" aria-label="Selecione faixa de ranking" onchange="carregarDados()">
       <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>
       <option value="Top1_100">Top 1–100</option>
       <option value="Top101_200">Top 101–200</option>
@@ -132,8 +173,7 @@
     </select>
   </div>
 
-  <div id="quantidadeMoedas" style="margin: 10px 0; font-weight: 600; color: #007BFF;"></div>
-
+  <div id="quantidadeMoedas" style="margin: 10px 0; font-weight: 600; color: #6cf;"></div>
   <div class="status" id="statusMsg" aria-live="polite">Carregando dados...</div>
 
   <table id="tabela" class="display" style="display:none" aria-live="polite">
@@ -170,7 +210,6 @@
           if (!json || !json.dados || json.dados.length === 0) {
             document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
             document.getElementById("tabela").style.display = "none";
-            document.getElementById("quantidadeMoedas").innerText = "";
             return;
           }
 
@@ -188,7 +227,6 @@
           console.error(err);
           document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
           document.getElementById("tabela").style.display = "none";
-          document.getElementById("quantidadeMoedas").innerText = "";
         });
     }
 
@@ -208,7 +246,7 @@
         colunas.forEach(col => {
           const val = linha[col];
           if (String(val).includes("http")) {
-            row += `<td><a href="${val}" target="_blank" style="color:#007BFF">🔗 Link</a></td>`;
+            row += `<td><a href="${val}" target="_blank" style="color:#6cf">🔗 Link</a></td>`;
           } else if (col === "Volume") {
             const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
             const formatado = formatarAbreviado(num);
