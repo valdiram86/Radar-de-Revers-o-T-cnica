@@ -198,4 +198,55 @@
       cabecalho.innerHTML = "";  
       corpo.innerHTML = "";  
   
-      colunas
+      colunas.forEach(col => cabecalho.innerHTML += `<th>${col}</th>`);  
+  
+      dados.forEach(linha => {  
+        let row = "<tr>";  
+        colunas.forEach(col => {  
+          const val = linha[col];  
+          if (String(val).includes("http")) {  
+            row += `<td><a href="${val}" target="_blank" style="color:#6cf">🔗 Link</a></td>`;  
+          } else if (col === "Volume") {  
+            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));  
+            const formatado = formatarAbreviado(num);  
+            row += `<td>$${formatado}</td>`;  
+          } else {  
+            row += `<td>${val}</td>`;  
+          }  
+        });  
+        row += "</tr>";  
+        corpo.innerHTML += row;  
+      });  
+  
+      document.getElementById("tabela").style.display = "table";  
+      $('#tabela').DataTable({  
+        destroy: true,  
+        paging: false, // PAGINAÇÃO DESATIVADA  
+        dom: 'Bfrtip',  
+        buttons: ['copy', 'csv', 'excel', 'pdf'],  
+        language: {  
+          search: "🔍 Buscar símbolo:",  
+          zeroRecords: "Nada encontrado",  
+          info: "",  
+          infoEmpty: "",  
+          infoFiltered: "",  
+          paginate: {  
+            first: "Primeira",  
+            last: "Última",  
+            next: "Próxima",  
+            previous: "Anterior"  
+          },  
+        }  
+      });  
+    }  
+  
+    const anotacoes = document.getElementById("anotacoes");  
+    anotacoes.value = localStorage.getItem("anotacoesSalvas") || "";  
+    anotacoes.addEventListener("input", () => {  
+      localStorage.setItem("anotacoesSalvas", anotacoes.value);  
+    });  
+  
+    window.onload = carregarDados;  
+  </script>  
+</body>  
+</html>
