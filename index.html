@@ -6,7 +6,7 @@
   <title>SentinelX – Detecte o invisível. Execute com precisão.</title>
 
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/2752/2752761.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -17,99 +17,92 @@
 
   <style>
     body {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Poppins', sans-serif;
       background: #f2f2f2;
       color: #222;
       padding: 20px;
       zoom: 90%;
     }
-
-    .titulo-sentinel {
+    h2 {
+      margin-top: 0;
+      font-size: 32px;
+      color: #111;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-top: 0;
-      flex-wrap: wrap;
     }
-
-    .titulo-sentinel img {
+    h2 img {
       height: 48px;
       width: auto;
       border-radius: 6px;
     }
-
-    .titulo-texto {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .titulo-principal {
-      font-size: 32px;
-      font-weight: 700;
-      color: #111;
-    }
-
-    .titulo-sub {
-      font-size: 14px;
+    h2 span {
       font-weight: 400;
+      font-size: 18px;
+      margin-left: 8px;
       color: #555;
-      margin-top: 2px;
     }
-
-    select {
+    #filtro select {
       background: #fff;
-      color: #111;
+      color: #222;
       padding: 6px;
       border: 1px solid #aaa;
       border-radius: 4px;
     }
-
     table.dataTable {
       background-color: #fff;
       color: #111;
     }
-
     table.dataTable th, table.dataTable td {
       border: 1px solid #ccc;
       padding: 8px;
     }
-
     table.dataTable tr:hover {
       background-color: #f0f0f0;
     }
-
     .status {
       font-weight: bold;
-      margin-bottom: 10px;
-      color: #444;
-    }
-
-    #quantidadeMoedas {
       margin: 10px 0;
-      font-weight: 600;
-      color: #333;
     }
-
     textarea {
       width: 100%;
       height: 100px;
       padding: 10px;
-      background: #fafafa;
-      color: #111;
-      border: 1px solid #ccc;
+      background: #eaeaea;
+      color: #222;
+      border: 1px solid #aaa;
       font-size: 14px;
-      font-family: 'Orbitron', monospace;
+      font-family: 'Poppins', sans-serif;
     }
-
-    /* Responsividade */
+    .spinner {
+      border: 4px solid #ccc;
+      border-top: 4px solid #007BFF;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     @media (max-width: 600px) {
       body {
         zoom: 100%;
         padding: 10px;
       }
-      .titulo-principal {
-        font-size: 26px;
+      h2 {
+        font-size: 24px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      h2 img {
+        height: 36px;
+        margin-bottom: 8px;
       }
       table.dataTable {
         font-size: 12px;
@@ -119,13 +112,10 @@
 </head>
 
 <body>
-  <div class="titulo-sentinel">
-    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="SentinelX">
-    <div class="titulo-texto">
-      <div class="titulo-principal">SentinelX</div>
-      <div class="titulo-sub">Detecte o invisível. Execute com precisão.</div>
-    </div>
-  </div>
+  <h2>
+    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="Inteligência Artificial SentinelX">
+    SentinelX <span>Detecte o invisível. Execute com precisão.</span>
+  </h2>
 
   <div id="filtro">
     <label for="faixaSelect">Faixa de ranking:</label>
@@ -142,10 +132,11 @@
     </select>
   </div>
 
-  <div id="quantidadeMoedas"></div>
+  <div id="quantidadeMoedas" style="margin: 10px 0; font-weight: 600; color: #007BFF;"></div>
+
   <div class="status" id="statusMsg" aria-live="polite">Carregando dados...</div>
 
-  <table id="tabela" class="display" style="display:none">
+  <table id="tabela" class="display" style="display:none" aria-live="polite">
     <thead><tr id="cabecalho"></tr></thead>
     <tbody id="conteudo"></tbody>
   </table>
@@ -170,8 +161,7 @@
     function carregarDados() {
       const aba = document.getElementById("faixaSelect").value;
       const url = `${endpointBase}?email=${email}&aba=${aba}`;
-
-      document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
+      document.getElementById("statusMsg").innerHTML = '<span class="spinner"></span>Carregando dados...';
       document.getElementById("quantidadeMoedas").innerText = "";
 
       fetch(url)
@@ -180,6 +170,7 @@
           if (!json || !json.dados || json.dados.length === 0) {
             document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
             document.getElementById("tabela").style.display = "none";
+            document.getElementById("quantidadeMoedas").innerText = "";
             return;
           }
 
@@ -196,6 +187,8 @@
         .catch(err => {
           console.error(err);
           document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
+          document.getElementById("tabela").style.display = "none";
+          document.getElementById("quantidadeMoedas").innerText = "";
         });
     }
 
@@ -215,7 +208,7 @@
         colunas.forEach(col => {
           const val = linha[col];
           if (String(val).includes("http")) {
-            row += `<td><a href="${val}" target="_blank" style="color:#337ab7">🔗 Link</a></td>`;
+            row += `<td><a href="${val}" target="_blank" style="color:#007BFF">🔗 Link</a></td>`;
           } else if (col === "Volume") {
             const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
             const formatado = formatarAbreviado(num);
