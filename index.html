@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SentinelX – Detecte o invisível. Execute com precisão.</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -15,25 +16,53 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: 'Orbitron', sans-serif;
+      background: #0b0b0b;
+      color: #ccc;
       padding: 20px;
       zoom: 90%;
     }
     h2 {
       margin-top: 0;
       font-size: 28px;
-      color: #111;
-      font-weight: bold;
+      color: #e0e0e0;
+      font-weight: 700;
+      text-shadow: 0 0 8px #333;
     }
-    table { width: 100%; background: white; border-collapse: collapse; }
-    .status { font-weight: bold; margin-bottom: 10px; }
+    select {
+      background: #222;
+      color: #ccc;
+      padding: 6px;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    table.dataTable {
+      background-color: #1b1b1b;
+      color: #ddd;
+    }
+    table.dataTable th, table.dataTable td {
+      border: 1px solid #444;
+      padding: 8px;
+    }
+    table.dataTable tr:hover {
+      background-color: #333;
+    }
+    .status {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
     textarea {
       width: 100%;
       height: 100px;
       padding: 10px;
+      background: #111;
+      color: #ccc;
+      border: 1px solid #333;
       font-size: 14px;
-      margin-top: 10px;
+      font-family: 'Orbitron', monospace;
+    }
+    label {
+      font-weight: 500;
     }
   </style>
 </head>
@@ -124,7 +153,7 @@
         colunas.forEach(col => {
           const val = linha[col];
           if (String(val).includes("http")) {
-            row += `<td><a href="${val}" target="_blank">🔗 Link</a></td>`;
+            row += `<td><a href="${val}" target="_blank" style="color:#6cf">🔗 Link</a></td>`;
           } else if (col === "Volume") {
             const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
             const formatado = formatarAbreviado(num);
@@ -142,7 +171,14 @@
         destroy: true,
         paging: false,
         dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf']
+        buttons: ['copy', 'csv', 'excel', 'pdf'],
+        language: {
+          search: "🔍 Buscar símbolo:",
+          zeroRecords: "Nada encontrado",
+          info: "",
+          infoEmpty: "",
+          infoFiltered: "",
+        }
       });
     }
 
