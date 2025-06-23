@@ -75,6 +75,42 @@
       font-size: 14px;
       font-family: 'Orbitron', monospace;
     }
+    /* Spinner CSS */
+    .spinner {
+      border: 4px solid #222;
+      border-top: 4px solid #6cf;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsividade */
+    @media (max-width: 600px) {
+      body {
+        zoom: 100%;
+        padding: 10px;
+      }
+      h2 {
+        font-size: 22px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      h2 img {
+        height: 36px;
+        margin-bottom: 8px;
+      }
+      table.dataTable {
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 
@@ -86,7 +122,7 @@
 
   <div id="filtro">
     <label for="faixaSelect">Faixa de ranking:</label>
-    <select id="faixaSelect" onchange="carregarDados()">
+    <select id="faixaSelect" aria-label="Selecione faixa de ranking" onchange="carregarDados()">
       <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>
       <option value="Top1_100">Top 1–100</option>
       <option value="Top101_200">Top 101–200</option>
@@ -99,9 +135,9 @@
     </select>
   </div>
 
-  <div class="status" id="statusMsg">Carregando dados...</div>
+  <div class="status" id="statusMsg" aria-live="polite">Carregando dados...</div>
 
-  <table id="tabela" class="display" style="display:none">
+  <table id="tabela" class="display" style="display:none" aria-live="polite">
     <thead><tr id="cabecalho"></tr></thead>
     <tbody id="conteudo"></tbody>
   </table>
@@ -127,12 +163,13 @@
       const aba = document.getElementById("faixaSelect").value;
       const url = `${endpointBase}?email=${email}&aba=${aba}`;
 
-      document.getElementById("statusMsg").innerText = "⏳ Carregando dados...";
+      document.getElementById("statusMsg").innerHTML = '<span class="spinner"></span>Carregando dados...';
       fetch(url)
         .then(res => res.json())
         .then(json => {
           if (!json || !json.dados || json.dados.length === 0) {
             document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
+            document.getElementById("tabela").style.display = "none";
             return;
           }
 
@@ -148,6 +185,7 @@
         .catch(err => {
           console.error(err);
           document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
+          document.getElementById("tabela").style.display = "none";
         });
     }
 
@@ -183,15 +221,22 @@
       document.getElementById("tabela").style.display = "table";
       $('#tabela').DataTable({
         destroy: true,
-        paging: false,
+        paging: true,
+        pageLength: 25,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf'],
         language: {
           search: "🔍 Buscar símbolo:",
           zeroRecords: "Nada encontrado",
-          info: "",
-          infoEmpty: "",
-          infoFiltered: "",
+          info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+          infoEmpty: "Nenhum dado disponível",
+          infoFiltered: "(filtrado de _MAX_ total)",
+          paginate: {
+            first: "Primeira",
+            last: "Última",
+            next: "Próxima",
+            previous: "Anterior"
+          },
         }
       });
     }
