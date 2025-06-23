@@ -1,253 +1,201 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SentinelX – Detecte o invisível. Execute com precisão.</title>
-
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/2752/2752761.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-
-  <style>
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: #0b0b0b;
-      color: #ccc;
-      padding: 20px;
-      zoom: 90%;
-    }
-    h2 {
-      margin-top: 0;
-      font-size: 28px;
-      color: #e0e0e0;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    h2 img {
-      height: 48px;
-      width: auto;
-      border-radius: 6px;
-    }
-    h2 span {
-      font-weight: 400;
-      font-size: 18px;
-      margin-left: 8px;
-      color: #aaa;
-    }
-    select {
-      background: #222;
-      color: #ccc;
-      padding: 6px;
-      border: 1px solid #555;
-      border-radius: 4px;
-    }
-    table.dataTable {
-      background-color: #1b1b1b;
-      color: #ddd;
-    }
-    table.dataTable th, table.dataTable td {
-      border: 1px solid #444;
-      padding: 8px;
-    }
-    table.dataTable tr:hover {
-      background-color: #333;
-    }
-    .status {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      padding: 10px;
-      background: #111;
-      color: #ccc;
-      border: 1px solid #333;
-      font-size: 14px;
-      font-family: 'Orbitron', monospace;
-    }
-    /* Spinner CSS */
-    .spinner {
-      border: 4px solid #222;
-      border-top: 4px solid #6cf;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Responsividade */
-    @media (max-width: 600px) {
-      body {
-        zoom: 100%;
-        padding: 10px;
-      }
-      h2 {
-        font-size: 22px;
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      h2 img {
-        height: 36px;
-        margin-bottom: 8px;
-      }
-      table.dataTable {
-        font-size: 12px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <h2>
-    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="Inteligência Artificial SentinelX">
-    SentinelX <span>Detecte o invisível. Execute com precisão.</span>
-  </h2>
-
-  <div id="filtro">
-    <label for="faixaSelect">Faixa de ranking:</label>
-    <select id="faixaSelect" aria-label="Selecione faixa de ranking" onchange="carregarDados()">
-      <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>
-      <option value="Top1_100">Top 1–100</option>
-      <option value="Top101_200">Top 101–200</option>
-      <option value="Top201_350">Top 201–350</option>
-      <option value="Top351_600">Top 351–600</option>
-      <option value="Top601_1000">Top 601–1000</option>
-      <option value="Top1001_1500">Top 1001–1500</option>
-      <option value="Top1501_2000">Top 1501–2000</option>
-      <option value="Top2001_2700">Top 2001–2700</option>
-    </select>
-  </div>
-
-  <div class="status" id="statusMsg" aria-live="polite">Carregando dados...</div>
-
-  <table id="tabela" class="display" style="display:none" aria-live="polite">
-    <thead><tr id="cabecalho"></tr></thead>
-    <tbody id="conteudo"></tbody>
-  </table>
-
-  <h3>📝 Anotações Pessoais</h3>
-  <textarea id="anotacoes" placeholder="Digite aqui suas anotações..."></textarea>
-
-  <script>
-    const endpointBase = "https://script.google.com/macros/s/AKfycbwLZRTwWx17I0SgRvjqjifGQ52b_QtscU3AYHu30en1CunaPdcisYxMczNMy5AWpTmWEg/exec";
-    const email = "valdiram.lima.2013@gmail.com";
-    let todosOsDados = [];
-
-    function formatarAbreviado(num) {
-      if (isNaN(num)) return "-";
-      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
-      return num.toFixed(2);
-    }
-
-    function carregarDados() {
-      const aba = document.getElementById("faixaSelect").value;
-      const url = `${endpointBase}?email=${email}&aba=${aba}`;
-
-      document.getElementById("statusMsg").innerHTML = '<span class="spinner"></span>Carregando dados...';
-      fetch(url)
-        .then(res => res.json())
-        .then(json => {
-          if (!json || !json.dados || json.dados.length === 0) {
-            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";
-            document.getElementById("tabela").style.display = "none";
-            return;
-          }
-
-          todosOsDados = json.dados;
-
-          if ($.fn.DataTable.isDataTable('#tabela')) {
-            $('#tabela').DataTable().clear().destroy();
-          }
-
-          montarTabela(todosOsDados);
-          document.getElementById("statusMsg").innerText = "✅ Dados carregados.";
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";
-          document.getElementById("tabela").style.display = "none";
-        });
-    }
-
-    function montarTabela(dados) {
-      const colunas = Object.keys(dados[0]).filter(c =>
-        !["Score Técnico", "RSI", "PAG", "Atenção", "Queda Moderada", "Queda Forte", "Neutro"].includes(c)
-      );
-      const cabecalho = document.getElementById("cabecalho");
-      const corpo = document.getElementById("conteudo");
-      cabecalho.innerHTML = "";
-      corpo.innerHTML = "";
-
-      colunas.forEach(col => cabecalho.innerHTML += `<th>${col}</th>`);
-
-      dados.forEach(linha => {
-        let row = "<tr>";
-        colunas.forEach(col => {
-          const val = linha[col];
-          if (String(val).includes("http")) {
-            row += `<td><a href="${val}" target="_blank" style="color:#6cf">🔗 Link</a></td>`;
-          } else if (col === "Volume") {
-            const num = parseFloat(val.toString().replace(/[^\d.-]/g, ""));
-            const formatado = formatarAbreviado(num);
-            row += `<td>$${formatado}</td>`;
-          } else {
-            row += `<td>${val}</td>`;
-          }
-        });
-        row += "</tr>";
-        corpo.innerHTML += row;
-      });
-
-      document.getElementById("tabela").style.display = "table";
-      $('#tabela').DataTable({
-        destroy: true,
-        paging: true,
-        pageLength: 25,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf'],
-        language: {
-          search: "🔍 Buscar símbolo:",
-          zeroRecords: "Nada encontrado",
-          info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-          infoEmpty: "Nenhum dado disponível",
-          infoFiltered: "(filtrado de _MAX_ total)",
-          paginate: {
-            first: "Primeira",
-            last: "Última",
-            next: "Próxima",
-            previous: "Anterior"
-          },
-        }
-      });
-    }
-
-    const anotacoes = document.getElementById("anotacoes");
-    anotacoes.value = localStorage.getItem("anotacoesSalvas") || "";
-    anotacoes.addEventListener("input", () => {
-      localStorage.setItem("anotacoesSalvas", anotacoes.value);
-    });
-
-    window.onload = carregarDados;
-  </script>
-</body>
-</html>
+<!DOCTYPE html>  
+<html lang="pt-BR">  
+<head>  
+  <meta charset="UTF-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
+  <title>SentinelX – Detecte o invisível. Execute com precisão.</title>  
+  
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/2752/2752761.png"/>  
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">  
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>  
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>  
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>  
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>  
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>  
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>  
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>  
+  
+  <style>  
+    body {  
+      font-family: 'Orbitron', sans-serif;  
+      background: #0b0b0b;  
+      color: #ccc;  
+      padding: 20px;  
+      zoom: 90%;  
+    }  
+    h2 {  
+      margin-top: 0;  
+      font-size: 28px;  
+      color: #e0e0e0;  
+      font-weight: 700;  
+      display: flex;  
+      align-items: center;  
+      gap: 12px;  
+    }  
+    h2 img {  
+      height: 48px;  
+      width: auto;  
+      border-radius: 6px;  
+    }  
+    h2 span {  
+      font-weight: 400;  
+      font-size: 18px;  
+      margin-left: 8px;  
+      color: #aaa;  
+    }  
+    select {  
+      background: #222;  
+      color: #ccc;  
+      padding: 6px;  
+      border: 1px solid #555;  
+      border-radius: 4px;  
+    }  
+    table.dataTable {  
+      background-color: #1b1b1b;  
+      color: #ddd;  
+    }  
+    table.dataTable th, table.dataTable td {  
+      border: 1px solid #444;  
+      padding: 8px;  
+    }  
+    table.dataTable tr:hover {  
+      background-color: #333;  
+    }  
+    .status {  
+      font-weight: bold;  
+      margin-bottom: 10px;  
+    }  
+    textarea {  
+      width: 100%;  
+      height: 100px;  
+      padding: 10px;  
+      background: #111;  
+      color: #ccc;  
+      border: 1px solid #333;  
+      font-size: 14px;  
+      font-family: 'Orbitron', monospace;  
+    }  
+    /* Spinner CSS */  
+    .spinner {  
+      border: 4px solid #222;  
+      border-top: 4px solid #6cf;  
+      border-radius: 50%;  
+      width: 24px;  
+      height: 24px;  
+      animation: spin 1s linear infinite;  
+      display: inline-block;  
+      vertical-align: middle;  
+      margin-right: 8px;  
+    }  
+    @keyframes spin {  
+      0% { transform: rotate(0deg); }  
+      100% { transform: rotate(360deg); }  
+    }  
+  
+    /* Responsividade */  
+    @media (max-width: 600px) {  
+      body {  
+        zoom: 100%;  
+        padding: 10px;  
+      }  
+      h2 {  
+        font-size: 22px;  
+        flex-direction: column;  
+        align-items: flex-start;  
+      }  
+      h2 img {  
+        height: 36px;  
+        margin-bottom: 8px;  
+      }  
+      table.dataTable {  
+        font-size: 12px;  
+      }  
+    }  
+  </style>  
+</head>  
+  
+<body>  
+  <h2>  
+    <img src="https://cdn-icons-png.flaticon.com/128/2752/2752761.png" alt="Inteligência Artificial SentinelX">  
+    SentinelX <span>Detecte o invisível. Execute com precisão.</span>  
+  </h2>  
+  
+  <div id="filtro">  
+    <label for="faixaSelect">Faixa de ranking:</label>  
+    <select id="faixaSelect" aria-label="Selecione faixa de ranking" onchange="carregarDados()">  
+      <option value="OportunidadeVolume">Todas as moedas (consolidado)</option>  
+      <option value="Top1_100">Top 1–100</option>  
+      <option value="Top101_200">Top 101–200</option>  
+      <option value="Top201_350">Top 201–350</option>  
+      <option value="Top351_600">Top 351–600</option>  
+      <option value="Top601_1000">Top 601–1000</option>  
+      <option value="Top1001_1500">Top 1001–1500</option>  
+      <option value="Top1501_2000">Top 1501–2000</option>  
+      <option value="Top2001_2700">Top 2001–2700</option>  
+    </select>  
+  </div>  
+  
+  <div class="status" id="statusMsg" aria-live="polite">Carregando dados...</div>  
+  
+  <table id="tabela" class="display" style="display:none" aria-live="polite">  
+    <thead><tr id="cabecalho"></tr></thead>  
+    <tbody id="conteudo"></tbody>  
+  </table>  
+  
+  <h3>📝 Anotações Pessoais</h3>  
+  <textarea id="anotacoes" placeholder="Digite aqui suas anotações..."></textarea>  
+  
+  <script>  
+    const endpointBase = "https://script.google.com/macros/s/AKfycbwLZRTwWx17I0SgRvjqjifGQ52b_QtscU3AYHu30en1CunaPdcisYxMczNMy5AWpTmWEg/exec";  
+    const email = "valdiram.lima.2013@gmail.com";  
+    let todosOsDados = [];  
+  
+    function formatarAbreviado(num) {  
+      if (isNaN(num)) return "-";  
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";  
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";  
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";  
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";  
+      return num.toFixed(2);  
+    }  
+  
+    function carregarDados() {  
+      const aba = document.getElementById("faixaSelect").value;  
+      const url = `${endpointBase}?email=${email}&aba=${aba}`;  
+  
+      document.getElementById("statusMsg").innerHTML = '<span class="spinner"></span>Carregando dados...';  
+      fetch(url)  
+        .then(res => res.json())  
+        .then(json => {  
+          if (!json || !json.dados || json.dados.length === 0) {  
+            document.getElementById("statusMsg").innerText = "⚠️ Nenhum dado encontrado.";  
+            document.getElementById("tabela").style.display = "none";  
+            return;  
+          }  
+  
+          todosOsDados = json.dados;  
+  
+          if ($.fn.DataTable.isDataTable('#tabela')) {  
+            $('#tabela').DataTable().clear().destroy();  
+          }  
+  
+          montarTabela(todosOsDados);  
+          document.getElementById("statusMsg").innerText = "✅ Dados carregados.";  
+        })  
+        .catch(err => {  
+          console.error(err);  
+          document.getElementById("statusMsg").innerText = "❌ Erro ao carregar dados.";  
+          document.getElementById("tabela").style.display = "none";  
+        });  
+    }  
+  
+    function montarTabela(dados) {  
+      const colunas = Object.keys(dados[0]).filter(c =>  
+        !["Score Técnico", "RSI", "PAG", "Atenção", "Queda Moderada", "Queda Forte", "Neutro"].includes(c)  
+      );  
+      const cabecalho = document.getElementById("cabecalho");  
+      const corpo = document.getElementById("conteudo");  
+      cabecalho.innerHTML = "";  
+      corpo.innerHTML = "";  
+  
+      colunas
